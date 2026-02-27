@@ -4,7 +4,7 @@
 My project/
 ├─ data-ROI-192-96
 └─ My repo/
-   ├─requirements.txt
+   ├─ requirements.txt
    ├─ main.py
    ├─ lesion_dataloaders.py
    ├─ utils.py
