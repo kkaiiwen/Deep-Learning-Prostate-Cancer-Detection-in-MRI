@@ -1,7 +1,10 @@
-'''text
+## Project structure
+
+```text
 My project/
 ├─ data-ROI-192-96
 └─ My repo/
+   ├─requirements.txt
    ├─ main.py
    ├─ lesion_dataloaders.py
    ├─ utils.py
@@ -9,4 +12,4 @@ My project/
        ├─ train.txt
        ├─ val.txt
        └─ test.txt
-'''
+```
