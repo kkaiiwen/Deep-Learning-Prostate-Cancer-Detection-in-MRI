@@ -11,3 +11,10 @@ venv/
 
 # MacOS files
 .DS_Store
+
+# Training outputs
+*.ckpt
+*.pt
+*.h5
+logs/
+results/
