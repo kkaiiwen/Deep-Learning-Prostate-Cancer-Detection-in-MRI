@@ -5,7 +5,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 
-from lesion_dataloaders import mydataloader, get_train_transforms
+from data_loader import mydataloader, get_train_transforms
 from utils import to_tensor, SegmentationLoss, bin_dice
 
 
