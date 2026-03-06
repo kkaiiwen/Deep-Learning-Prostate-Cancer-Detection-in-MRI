@@ -1,4 +1,4 @@
-# lesion_dataloaders.py
+# data_loader.py
 
 import os
 import numpy as np
