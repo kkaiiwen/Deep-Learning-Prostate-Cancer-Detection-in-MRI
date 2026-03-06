@@ -1,6 +1,5 @@
 # main.py
 
-import os
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -12,7 +11,7 @@ from utils import to_tensor, SegmentationLoss, bin_dice
 # 3D UNet
 
 class UNet(nn.Module):
-    def __init__(self, in_ch=3, out_ch=1, base=32):
+    def __init__(self, in_ch=3, out_ch=1, base=8):
         super().__init__()
 
         def block(in_f, out_f):
@@ -28,31 +27,30 @@ class UNet(nn.Module):
         self.enc1 = block(in_ch, base)
         self.pool1 = nn.MaxPool3d(2)
 
-        self.enc2 = block(base, base*2)
+        self.enc2 = block(base, base * 2)
         self.pool2 = nn.MaxPool3d(2)
 
-        self.enc3 = block(base*2, base*4)
+        self.enc3 = block(base * 2, base * 4)
         self.pool3 = nn.MaxPool3d(2)
 
-        self.bottleneck = block(base*4, base*8)
+        self.bottleneck = block(base * 4, base * 8)
 
-        self.up3 = nn.ConvTranspose3d(base*8, base*4, 2, 2)
-        self.dec3 = block(base*8, base*4)
+        self.up3 = nn.ConvTranspose3d(base * 8, base * 4, 2, 2)
+        self.dec3 = block(base * 8, base * 4)
 
-        self.up2 = nn.ConvTranspose3d(base*4, base*2, 2, 2)
-        self.dec2 = block(base*4, base*2)
+        self.up2 = nn.ConvTranspose3d(base * 4, base * 2, 2, 2)
+        self.dec2 = block(base * 4, base * 2)
 
-        self.up1 = nn.ConvTranspose3d(base*2, base, 2, 2)
-        self.dec1 = block(base*2, base)
+        self.up1 = nn.ConvTranspose3d(base * 2, base, 2, 2)
+        self.dec1 = block(base * 2, base)
 
         self.out = nn.Conv3d(base, out_ch, 1)
 
     def forward(self, x):
-
         e1 = self.enc1(x)
         e2 = self.enc2(self.pool1(e1))
         e3 = self.enc3(self.pool2(e2))
-        b  = self.bottleneck(self.pool3(e3))
+        b = self.bottleneck(self.pool3(e3))
 
         d3 = self.up3(b)
         d3 = self.dec3(torch.cat([d3, e3], dim=1))
@@ -69,16 +67,25 @@ class UNet(nn.Module):
 # Training
 
 def main():
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("Using device:", device)
 
     data_path = "./1-uclH-data_ratio0.8"
 
     train_ds = mydataloader(data_path, "train", get_train_transforms())
-    val_ds   = mydataloader(data_path, "val", None)
+    val_ds = mydataloader(data_path, "val", None)
 
-    train_loader = DataLoader(train_ds, batch_size=1, shuffle=True)
-    val_loader   = DataLoader(val_ds, batch_size=1)
+    print("Train samples:", len(train_ds))
+    print("Val samples:", len(val_ds))
+
+    train_loader = DataLoader(train_ds, batch_size=1, shuffle=True, num_workers=0)
+    val_loader = DataLoader(val_ds, batch_size=1, num_workers=0)
 
     model = UNet().to(device)
 
@@ -87,13 +94,12 @@ def main():
 
     best_dice = 0
 
-    for epoch in range(2):
-
-        # train
+    for epoch in range(1):
         model.train()
         total_loss = 0
 
-        for batch in train_loader:
+        for i, batch in enumerate(train_loader):
+            print(f"Training batch {i + 1}/{len(train_loader)}", end="\r")
             x = to_tensor(batch["image"], device)
             y = to_tensor(batch["label"], device)
 
@@ -105,20 +111,20 @@ def main():
 
             total_loss += loss.item()
 
-        print(f"Epoch {epoch} | Train loss: {total_loss/len(train_loader):.4f}")
+        print(f"Epoch {epoch + 1} | Train loss: {total_loss / len(train_loader):.4f}")
 
-        # validation
         model.eval()
         dice_scores = []
 
         with torch.no_grad():
-            for batch in val_loader:
+            for i, batch in enumerate(val_loader):
+                print(f"Validation batch {i + 1}/{len(val_loader)}", end="\r")
                 x = to_tensor(batch["image"], device)
                 y = to_tensor(batch["label"], device)
                 out = model(x)
                 dice_scores.append(bin_dice(out, y).item())
 
-        mean_dice = sum(dice_scores)/len(dice_scores)
+        mean_dice = sum(dice_scores) / len(dice_scores)
         print(f"Validation Dice: {mean_dice:.4f}")
 
         if mean_dice > best_dice:
