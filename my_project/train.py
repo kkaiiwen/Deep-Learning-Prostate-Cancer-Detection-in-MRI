@@ -93,7 +93,7 @@ def main():
     config = {
         "seed": 42,
         "batch_size": 1,
-        "num_workers": 4,
+        "num_workers": 2,
         "base_channels": 16,
         "learning_rate": 3e-4,
         "weight_decay": 1e-5,
@@ -101,7 +101,7 @@ def main():
         "num_epochs": 50,
         "early_stop_patience": 10,
         "roi_size": [64, 128, 128],
-        "sw_batch_size": 2,
+        "sw_batch_size": 4,
     }
 
     with open(os.path.join(out_dir, "config.json"), "w") as f:
@@ -115,7 +115,7 @@ def main():
 
     num_workers = config["num_workers"]
     pin_memory = device.type == "cuda"
-    persistent = num_workers > 0
+    persistent = False
 
     train_loader = DataLoader(
         train_ds,
