@@ -4,3 +4,4 @@ nibabel>=5.2
 numpy>=1.26
 scipy>=1.11
 matplotlib>=3.8
+pandas>=2.0
