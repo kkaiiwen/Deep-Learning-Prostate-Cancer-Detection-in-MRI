@@ -35,11 +35,11 @@ venv\Scripts\activate
 
 pip install -r requirements.txt
 
-# Uninstall CPU PyTorch packages
+# Uninstall CPU PyTorch package
 pip uninstall torch -y
 
 # Install PyTorch with CUDA support (GPU acceleration)
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+pip install torch --index-url https://download.pytorch.org/whl/cu128
 
 cd my_project
 python train.py
