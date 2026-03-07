@@ -24,7 +24,7 @@ Deep-Learning-Prostate-Cancer-Detection-in-MRI
 
 ## Quick start
 
-## Windows (GPU)
+### Windows (GPU)
 
 ```bash
 python -m venv venv
@@ -39,7 +39,7 @@ cd my_project
 python main.py
 ```
 
-## macOS
+### macOS
 
 ```bash
 python3 -m venv venv
