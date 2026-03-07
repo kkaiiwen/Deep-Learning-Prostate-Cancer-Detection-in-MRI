@@ -8,11 +8,5 @@ __pycache__/
 # Virtual environment
 venv/
 
-# Model weights
-*.pth
-
-# Training and testing results
-results/
-
 # macOS files
 .DS_Store

@@ -1,0 +1,17 @@
+{
+  "seed": 42,
+  "batch_size": 1,
+  "num_workers": 2,
+  "base_channels": 16,
+  "learning_rate": 0.0003,
+  "weight_decay": 1e-05,
+  "loss_alpha": 0.7,
+  "num_epochs": 50,
+  "early_stop_patience": 10,
+  "roi_size": [
+    64,
+    128,
+    128
+  ],
+  "sw_batch_size": 4
+}

@@ -1,0 +1,9 @@
+Num cases: 241
+Dice mean: 0.4251
+Dice std:  0.1890
+IoU mean:  0.2878
+IoU std:   0.1497
+Precision mean: 0.4154
+Precision std:  0.2408
+Recall mean: 0.5386
+Recall std:  0.2141

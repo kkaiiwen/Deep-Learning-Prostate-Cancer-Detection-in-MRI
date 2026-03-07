@@ -1,0 +1,5 @@
+Patient866076620_study_0, Dice=0.0000, IoU=0.0000, Precision=0.0000, Recall=0.0000
+Patient874087940_study_0, Dice=0.0000, IoU=0.0000, Precision=0.0000, Recall=0.0000
+Patient892640977_study_0, Dice=0.0000, IoU=0.0000, Precision=0.0000, Recall=0.0000
+Patient928575900_study_0, Dice=0.0000, IoU=0.0000, Precision=0.0000, Recall=0.0000
+Patient928575900_study_0, Dice=0.0000, IoU=0.0000, Precision=0.0000, Recall=0.0000
