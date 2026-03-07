@@ -13,6 +13,8 @@ Deep-Learning-Prostate-Cancer-Detection-in-MRI
 │   │   ├── val.txt
 │   │   └── test.txt
 │   │
+│   ├── results/
+│   │
 │   ├── data_loader.py
 │   ├── model.py
 │   ├── test.py
