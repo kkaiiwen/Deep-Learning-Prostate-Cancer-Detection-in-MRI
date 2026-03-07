@@ -14,8 +14,11 @@ Deep-Learning-Prostate-Cancer-Detection-in-MRI
 │   │   └── test.txt
 │   │
 │   ├── data_loader.py
-│   ├── main.py
-│   └── utils.py
+│   ├── model.py
+│   ├── test.py
+│   ├── train.py
+│   ├── utils.py
+│   └── visualise.py
 │
 ├── .gitignore
 ├── README.md
@@ -36,7 +39,11 @@ pip install -r requirements.txt
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
 
 cd my_project
-python main.py
+python train.py
+
+python test.py
+
+python visualise.py
 ```
 
 ### macOS
@@ -48,5 +55,9 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 cd my_project
-python main.py
+python train.py
+
+python test.py
+
+python visualise.py
 ```

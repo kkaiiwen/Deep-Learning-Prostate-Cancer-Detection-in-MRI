@@ -10,6 +10,9 @@ from monai.transforms import (
     RandRotate90d,
     RandScaleIntensityd,
     RandShiftIntensityd,
+    RandCropByPosNegLabeld,
+    CropForegroundd,
+    SpatialPadd,
 )
 
 
@@ -20,13 +23,14 @@ def _load_nii(path, add_channel=True):
     return data
 
 
-class mydataloader(Dataset):
+class MyDataLoader(Dataset):
     """
     Reads split files formatted as:
     t2 adc dwi zone lesion
 
     Uses:
       - first 3 as input image channels
+      - 4th as prostate zone mask for ROI cropping
       - last as binary lesion label
     """
 
@@ -53,31 +57,40 @@ class mydataloader(Dataset):
             )
 
         img_paths = parts[:3]
-        mask_path = parts[-1]
+        zone_path = parts[3]
+        label_path = parts[4]
 
         img_paths_full = []
         for p in img_paths:
             full_p = os.path.normpath(os.path.join(self.base_dir, p))
             img_paths_full.append(full_p)
 
-        mask_path_full = os.path.normpath(os.path.join(self.base_dir, mask_path))
+        zone_path_full = os.path.normpath(os.path.join(self.base_dir, zone_path))
+        label_path_full = os.path.normpath(os.path.join(self.base_dir, label_path))
 
         imgs = []
         for p in img_paths_full:
             imgs.append(_load_nii(p))
-
         image = np.concatenate(imgs, axis=0)  # (3, X, Y, Z)
 
-        mask = _load_nii(mask_path_full)
-        mask = (mask > 0).astype(np.float32)
+        zone = _load_nii(zone_path_full)
+        zone = (zone > 0).astype(np.float32)
+
+        label = _load_nii(label_path_full)
+        label = (label > 0).astype(np.float32)
 
         # Convert to PyTorch 3D order: (C, X, Y, Z) -> (C, Z, Y, X)
         image = np.transpose(image, (0, 3, 2, 1))
-        mask = np.transpose(mask, (0, 3, 2, 1))
+        zone = np.transpose(zone, (0, 3, 2, 1))
+        label = np.transpose(label, (0, 3, 2, 1))
+
+        case_id = os.path.basename(os.path.dirname(label_path_full))
 
         sample = {
             "image": torch.from_numpy(image).float(),
-            "label": torch.from_numpy(mask).float(),
+            "zone": torch.from_numpy(zone).float(),
+            "label": torch.from_numpy(label).float(),
+            "case_id": case_id,
         }
 
         if self.transform is not None:
@@ -89,15 +102,37 @@ class mydataloader(Dataset):
 def get_train_transforms():
     return Compose([
         NormalizeIntensityd(keys=["image"], nonzero=True, channel_wise=True),
-        RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=0),
-        RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=1),
-        RandRotate90d(keys=["image", "label"], prob=0.5, max_k=3),
+        CropForegroundd(
+            keys=["image", "zone", "label"],
+            source_key="zone",
+            margin=8,
+        ),
+        SpatialPadd(
+            keys=["image", "zone", "label"],
+            spatial_size=(64, 128, 128),
+        ),
+        RandCropByPosNegLabeld(
+            keys=["image", "zone", "label"],
+            label_key="label",
+            spatial_size=(64, 128, 128),
+            pos=2,
+            neg=1,
+            num_samples=1,
+        ),
+        RandFlipd(keys=["image", "zone", "label"], prob=0.5, spatial_axis=0),
+        RandFlipd(keys=["image", "zone", "label"], prob=0.5, spatial_axis=1),
+        RandRotate90d(keys=["image", "zone", "label"], prob=0.5, max_k=3),
         RandScaleIntensityd(keys=["image"], factors=0.1, prob=0.3),
         RandShiftIntensityd(keys=["image"], offsets=0.1, prob=0.3),
     ])
 
 
-def get_val_transforms():
+def get_eval_transforms():
     return Compose([
         NormalizeIntensityd(keys=["image"], nonzero=True, channel_wise=True),
+        CropForegroundd(
+            keys=["image", "zone", "label"],
+            source_key="zone",
+            margin=8,
+        ),
     ])

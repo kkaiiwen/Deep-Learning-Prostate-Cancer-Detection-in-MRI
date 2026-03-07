@@ -5,16 +5,14 @@ data-ROI-192-96/
 __pycache__/
 *.pyc
 
-# Virtual environments
+# Virtual environment
 venv/
-.env/
 
-# MacOS files
-.DS_Store
+# Model weights
+*.pth
 
-# Training outputs
-*.ckpt
-*.pt
-*.h5
-logs/
+# Training and testing results
 results/
+
+# macOS files
+.DS_Store
