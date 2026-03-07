@@ -24,7 +24,7 @@ class ConvBlock(nn.Module):
 
 
 class UNet(nn.Module):
-    def __init__(self, in_ch=3, out_ch=1, base=8):
+    def __init__(self, in_ch=3, out_ch=1, base=16):
         super().__init__()
 
         self.enc1 = ConvBlock(in_ch, base)
@@ -166,7 +166,7 @@ def main():
         num_workers=0,
     )
 
-    model = UNet(in_ch=3, out_ch=1, base=8).to(device)
+    model = UNet(in_ch=3, out_ch=1, base=16).to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=3e-4, weight_decay=1e-5)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
