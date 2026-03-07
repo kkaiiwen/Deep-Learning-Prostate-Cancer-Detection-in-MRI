@@ -3,6 +3,7 @@ import json
 import torch
 from torch.utils.data import DataLoader
 from monai.inferers import sliding_window_inference
+from monai.data import list_data_collate
 
 from data_loader import MyDataLoader, get_train_transforms, get_eval_transforms
 from model import UNet
@@ -123,6 +124,7 @@ def main():
         num_workers=num_workers,
         pin_memory=pin_memory,
         persistent_workers=persistent,
+        collate_fn=list_data_collate,
     )
 
     val_loader = DataLoader(
