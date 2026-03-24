@@ -42,14 +42,14 @@ class SegmentationLoss(nn.Module):
         return self.alpha * dice_loss + (1 - self.alpha) * bce
 
 
-def _binary_prediction(y_pred, threshold=0.5):
+def _binary_prediction(y_pred, y_true, threshold=0.5):
     probs = torch.sigmoid(y_pred)
     preds = (probs > threshold).float()
     return probs, preds
 
 
 def batch_dice(y_pred, y_true, threshold=0.5):
-    _, preds = _binary_prediction(y_pred, threshold)
+    _, preds = _binary_prediction(y_pred, y_true, threshold)
 
     numerator = 2 * torch.sum(preds * y_true, dim=(2, 3, 4))
     denominator = (
@@ -60,33 +60,20 @@ def batch_dice(y_pred, y_true, threshold=0.5):
     return torch.mean(numerator / denominator)
 
 
-def batch_iou(y_pred, y_true, threshold=0.5):
-    _, preds = _binary_prediction(y_pred, threshold)
-
-    intersection = torch.sum(preds * y_true, dim=(2, 3, 4))
-    union = (
-        torch.sum(preds, dim=(2, 3, 4))
-        + torch.sum(y_true, dim=(2, 3, 4))
-        - intersection
-        + 1e-6
-    )
-    return torch.mean(intersection / union)
-
-
-def batch_precision(y_pred, y_true, threshold=0.5):
-    _, preds = _binary_prediction(y_pred, threshold)
-
-    tp = torch.sum(preds * y_true, dim=(2, 3, 4))
-    fp = torch.sum(preds * (1 - y_true), dim=(2, 3, 4))
-    return torch.mean(tp / (tp + fp + 1e-6))
-
-
-def batch_recall(y_pred, y_true, threshold=0.5):
-    _, preds = _binary_prediction(y_pred, threshold)
+def batch_sensitivity(y_pred, y_true, threshold=0.5):
+    _, preds = _binary_prediction(y_pred, y_true, threshold)
 
     tp = torch.sum(preds * y_true, dim=(2, 3, 4))
     fn = torch.sum((1 - preds) * y_true, dim=(2, 3, 4))
     return torch.mean(tp / (tp + fn + 1e-6))
+
+
+def batch_specificity(y_pred, y_true, threshold=0.5):
+    _, preds = _binary_prediction(y_pred, y_true, threshold)
+
+    tn = torch.sum((1 - preds) * (1 - y_true), dim=(2, 3, 4))
+    fp = torch.sum(preds * (1 - y_true), dim=(2, 3, 4))
+    return torch.mean(tn / (tn + fp + 1e-6))
 
 
 def save_history_csv(history, out_path):
@@ -99,7 +86,7 @@ def save_history_csv(history, out_path):
 
 
 def save_case_metrics_csv(case_metrics, out_path):
-    fieldnames = ["case_id", "dice", "iou", "precision", "recall"]
+    fieldnames = ["case_id", "dice", "sensitivity", "specificity"]
     with open(out_path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
@@ -109,20 +96,17 @@ def save_case_metrics_csv(case_metrics, out_path):
 
 def save_test_summary(case_metrics, out_path):
     dice = np.array([row["dice"] for row in case_metrics], dtype=np.float32)
-    iou = np.array([row["iou"] for row in case_metrics], dtype=np.float32)
-    precision = np.array([row["precision"] for row in case_metrics], dtype=np.float32)
-    recall = np.array([row["recall"] for row in case_metrics], dtype=np.float32)
+    sensitivity = np.array([row["sensitivity"] for row in case_metrics], dtype=np.float32)
+    specificity = np.array([row["specificity"] for row in case_metrics], dtype=np.float32)
 
     with open(out_path, "w") as f:
         f.write(f"Num cases: {len(case_metrics)}\n")
         f.write(f"Dice mean: {dice.mean():.4f}\n")
         f.write(f"Dice std:  {dice.std():.4f}\n")
-        f.write(f"IoU mean:  {iou.mean():.4f}\n")
-        f.write(f"IoU std:   {iou.std():.4f}\n")
-        f.write(f"Precision mean: {precision.mean():.4f}\n")
-        f.write(f"Precision std:  {precision.std():.4f}\n")
-        f.write(f"Recall mean: {recall.mean():.4f}\n")
-        f.write(f"Recall std:  {recall.std():.4f}\n")
+        f.write(f"Sensitivity mean: {sensitivity.mean():.4f}\n")
+        f.write(f"Sensitivity std:  {sensitivity.std():.4f}\n")
+        f.write(f"Specificity mean: {specificity.mean():.4f}\n")
+        f.write(f"Specificity std:  {specificity.std():.4f}\n")
 
 
 def plot_history(history, out_dir):

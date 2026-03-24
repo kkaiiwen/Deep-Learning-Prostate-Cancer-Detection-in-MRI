@@ -10,9 +10,8 @@ from utils import (
     set_seed,
     to_tensor,
     batch_dice,
-    batch_iou,
-    batch_precision,
-    batch_recall,
+    batch_sensitivity,
+    batch_specificity,
     save_case_metrics_csv,
     save_test_summary,
 )
@@ -42,9 +41,8 @@ def run_test_set(model, loader, device, roi_size, sw_batch_size):
             case_metrics.append({
                 "case_id": case_id,
                 "dice": batch_dice(out, y).item(),
-                "iou": batch_iou(out, y).item(),
-                "precision": batch_precision(out, y).item(),
-                "recall": batch_recall(out, y).item(),
+                "sensitivity": batch_sensitivity(out, y).item(),
+                "specificity": batch_specificity(out, y).item(),
             })
 
     print()
@@ -104,8 +102,8 @@ def main():
         for row in sorted_cases[:5]:
             f.write(
                 f"{row['case_id']}, Dice={row['dice']:.4f}, "
-                f"IoU={row['iou']:.4f}, Precision={row['precision']:.4f}, "
-                f"Recall={row['recall']:.4f}\n"
+                f"Sensitivity={row['sensitivity']:.4f}, "
+                f"Specificity={row['specificity']:.4f}\n"
             )
 
     print("Test evaluation completed.")
